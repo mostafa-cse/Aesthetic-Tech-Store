@@ -9,7 +9,14 @@
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["ecommerce", "mern", "tech-store"],
+  "keywords": [
+    "ecommerce",
+    "mern",
+    "tech-store"
+  ],
   "author": "CSE-21",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "nodemailer": "^9.0.3"
+  }
 }

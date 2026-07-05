@@ -21,8 +21,23 @@ connectDB();
 const app = express();
 
 // ── Core Middleware ─────────────────────────────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://aesthetic-tech-store.web.app',
+  'https://aesthetic-tech-store.firebaseapp.com'
+];
+if (process.env.CLIENT_URL) {
+  allowedOrigins.push(process.env.CLIENT_URL.trim());
+}
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS Not Allowed'), false);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
