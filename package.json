@@ -1,0 +1,14 @@
+{
+  "name": "aesthetic-tech-store",
+  "version": "1.0.0",
+  "description": "Aesthetic Tech Store - MERN E-Commerce Platform | BUS 4101 | CSE-21",
+  "scripts": {
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "seed": "cd server && node seed.js",
+    "install:all": "cd server && npm install && cd ../client && npm install"
+  },
+  "keywords": ["mern", "ecommerce", "tech-store"],
+  "author": "CSE-21",
+  "license": "ISC"
+}

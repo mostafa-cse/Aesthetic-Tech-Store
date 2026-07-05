@@ -1,0 +1,223 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base Styles ─────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-dark text-gray-100 font-sans antialiased;
+    background: #0A0E1A;
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-surface;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-400;
+  }
+
+  ::selection {
+    background: rgba(108, 99, 255, 0.3);
+    color: white;
+  }
+}
+
+/* ── Component Styles ────────────────────────────────────────────────────── */
+@layer components {
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-600 text-white font-semibold px-6 py-2.5 rounded-lg
+           transition-all duration-200 shadow-glow-sm hover:shadow-glow
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-accent {
+    @apply bg-accent hover:bg-accent-dark text-dark font-semibold px-6 py-2.5 rounded-lg
+           transition-all duration-200 shadow-glow-accent active:scale-95
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-outline {
+    @apply border border-primary text-primary hover:bg-primary hover:text-white
+           font-semibold px-6 py-2.5 rounded-lg transition-all duration-200
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply text-gray-400 hover:text-white hover:bg-dark-card font-medium px-4 py-2 rounded-lg
+           transition-all duration-200;
+  }
+
+  .btn-danger {
+    @apply bg-error hover:bg-red-600 text-white font-semibold px-6 py-2.5 rounded-lg
+           transition-all duration-200 active:scale-95;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-dark-card border border-dark-border rounded-xl p-6
+           shadow-card transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply card hover:border-primary/50 hover:shadow-card-hover hover:-translate-y-1;
+  }
+
+  .glass-card {
+    @apply backdrop-blur-md bg-white/5 border border-white/10 rounded-xl
+           shadow-card;
+  }
+
+  /* Form Inputs */
+  .input {
+    @apply w-full bg-dark-surface border border-dark-border text-gray-100
+           placeholder-gray-500 rounded-lg px-4 py-2.5 text-sm
+           focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50
+           transition-colors duration-200;
+  }
+
+  .input-label {
+    @apply block text-sm font-medium text-gray-300 mb-1.5;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-primary { @apply badge bg-primary/20 text-primary-300; }
+  .badge-accent  { @apply badge bg-accent/20 text-accent; }
+  .badge-success { @apply badge bg-success/20 text-success; }
+  .badge-warning { @apply badge bg-warning/20 text-warning; }
+  .badge-error   { @apply badge bg-error/20 text-error; }
+  .badge-info    { @apply badge bg-info/20 text-info; }
+
+  /* Product Card */
+  .product-card {
+    @apply bg-dark-card border border-dark-border rounded-xl overflow-hidden
+           transition-all duration-300 cursor-pointer
+           hover:border-primary/50 hover:shadow-card-hover hover:-translate-y-2;
+  }
+
+  /* Discount Tag */
+  .discount-tag {
+    @apply absolute top-3 left-3 bg-error text-white text-xs font-bold
+           px-2 py-1 rounded-md z-10;
+  }
+
+  /* MegaCoin Chip */
+  .megacoin-chip {
+    @apply inline-flex items-center gap-1.5 bg-warning/10 border border-warning/30
+           text-warning text-sm font-semibold px-3 py-1 rounded-full;
+  }
+
+  /* Section Title */
+  .section-title {
+    @apply text-2xl md:text-3xl font-bold font-brand text-white;
+  }
+
+  /* Gradient Text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  }
+
+  /* Sidebar Nav Item */
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400
+           hover:bg-dark-muted hover:text-white transition-all duration-200
+           cursor-pointer font-medium;
+  }
+
+  .nav-item-active {
+    @apply nav-item bg-primary/20 text-primary border border-primary/30;
+  }
+
+  /* Status Pills */
+  .status-pending    { @apply badge-warning; }
+  .status-processing { @apply badge-info; }
+  .status-shipped    { @apply badge bg-purple-500/20 text-purple-400; }
+  .status-delivered  { @apply badge-success; }
+  .status-cancelled  { @apply badge-error; }
+
+  /* Table */
+  .table-dark {
+    @apply w-full text-sm text-left;
+  }
+  .table-dark thead tr {
+    @apply bg-dark-surface text-gray-400 uppercase text-xs tracking-wider;
+  }
+  .table-dark thead th {
+    @apply px-6 py-3;
+  }
+  .table-dark tbody tr {
+    @apply border-b border-dark-border hover:bg-dark-muted/30 transition-colors;
+  }
+  .table-dark tbody td {
+    @apply px-6 py-4 text-gray-300;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply bg-dark-muted rounded animate-pulse;
+    background: linear-gradient(90deg, #1A2235 25%, #243047 50%, #1A2235 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+/* ── Utility Styles ──────────────────────────────────────────────────────── */
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #6C63FF, #00D4AA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .border-gradient {
+    border-image: linear-gradient(135deg, #6C63FF, #00D4AA) 1;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(108, 99, 255, 0.4);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 20px rgba(0, 212, 170, 0.4);
+  }
+
+  .hero-grid {
+    background-image:
+      linear-gradient(rgba(108, 99, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108, 99, 255, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
