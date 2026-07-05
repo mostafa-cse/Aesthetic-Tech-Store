@@ -7,6 +7,8 @@ import { HiSparkles } from 'react-icons/hi2';
 import { registerUser, clearError } from '../../features/auth/authSlice';
 import { fetchCart } from '../../features/cart/cartSlice';
 import toast from 'react-hot-toast';
+import { auth } from '../../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 export default function RegisterPage() {
   const dispatch = useDispatch();
@@ -30,11 +32,26 @@ export default function RegisterPage() {
       toast.error('Password must be at least 6 characters');
       return;
     }
-    const result = await dispatch(registerUser({ name: form.name, email: form.email, password: form.password }));
-    if (registerUser.fulfilled.match(result)) {
-      dispatch(fetchCart());
-      toast.success('Account created! Welcome to Aesthetic Tech Store 🎉');
-      navigate('/');
+    try {
+      // 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
+      const firebaseUid = userCredential.user.uid;
+
+      // 2. Register user in our backend DB
+      const result = await dispatch(registerUser({ 
+        name: form.name, 
+        email: form.email, 
+        password: form.password,
+        firebaseUid 
+      }));
+
+      if (registerUser.fulfilled.match(result)) {
+        dispatch(fetchCart());
+        toast.success('Account created! Welcome to Aesthetic Tech Store 🎉');
+        navigate('/');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Firebase Registration failed');
     }
   };
 

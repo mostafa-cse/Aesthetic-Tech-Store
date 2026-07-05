@@ -36,7 +36,9 @@ const ImageUploader = ({ files, setFiles }) => {
   const inputRef = useRef();
   const previews = files.map((f) => {
     if (typeof f === 'string') return f;
-    return URL.createObjectURL(f);
+    if (f && f.url) return f.url;
+    if (f instanceof File || f instanceof Blob) return URL.createObjectURL(f);
+    return '';
   });
   return (
     <div>
@@ -89,8 +91,8 @@ const ProductModal = ({ product, onClose, onSaved }) => {
         discountPrice: product.discountPrice || '',
         stock: product.stock ?? '',
         sku: product.sku || '',
-        configurations: product.configurations
-          ? Object.entries(product.configurations).map(([k, v]) => ({ key: k, value: String(v) }))
+        configurations: Array.isArray(product.configuration)
+          ? product.configuration.map((item) => ({ key: item.key || '', value: String(item.value || '') }))
           : [],
         guaranteeDuration: product.guarantee?.duration || '',
         guaranteeUnit: product.guarantee?.unit || 'months',
@@ -135,22 +137,59 @@ const ProductModal = ({ product, onClose, onSaved }) => {
     setSaving(true);
     try {
       const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => {
-        if (k === 'configurations' || k === 'imageFiles') return;
-        fd.append(k, typeof v === 'boolean' ? String(v) : v);
-      });
+      
+      // Basic flat fields
+      fd.append('name', form.name);
+      fd.append('category', form.category);
+      fd.append('brand', form.brand);
+      fd.append('model', form.model || '');
+      fd.append('description', form.description);
+      fd.append('regularPrice', String(form.regularPrice));
+      fd.append('discountPrice', form.discountPrice ? String(form.discountPrice) : '');
+      fd.append('stock', String(form.stock));
+      fd.append('sku', form.sku || '');
+      fd.append('megaCoinRewardRate', form.megaCoinRewardRate ? String(form.megaCoinRewardRate) : '');
+      fd.append('isFeatured', String(form.isFeatured));
 
-      // configs as JSON
-      const configObj = {};
-      form.configurations.forEach(({ key, value }) => {
-        if (key.trim()) configObj[key.trim()] = value;
-      });
-      fd.append('configurations', JSON.stringify(configObj));
+      // configurations (as JSON array of spec objects)
+      const configArray = form.configurations
+        .filter((item) => item.key && item.key.trim())
+        .map((item) => ({ key: item.key.trim(), value: item.value }));
+      fd.append('configuration', JSON.stringify(configArray));
+
+      // guarantee
+      fd.append('guarantee', JSON.stringify({
+        duration: Number(form.guaranteeDuration) || 0,
+        unit: form.guaranteeUnit || 'months',
+        terms: form.guaranteeTerms || '',
+      }));
+
+      // warranty
+      fd.append('warranty', JSON.stringify({
+        duration: Number(form.warrantyDuration) || 0,
+        unit: form.warrantyUnit || 'months',
+        terms: form.warrantyTerms || '',
+      }));
+
+      // returnPolicy
+      fd.append('returnPolicy', JSON.stringify({
+        eligible: form.returnEligible,
+        windowDays: Number(form.returnWindowDays) || 7,
+        conditions: form.returnConditions || '',
+      }));
+
+      // tags
+      const tagsArray = form.tags
+        ? form.tags.split(',').map((t) => t.trim()).filter(Boolean)
+        : [];
+      fd.append('tags', JSON.stringify(tagsArray));
 
       // images
+      const existingImages = imageFiles.filter(f => !(f instanceof File));
+      fd.append('existingImages', JSON.stringify(existingImages));
+
       imageFiles.forEach((f) => {
         if (f instanceof File) fd.append('images', f);
-        else fd.append('existingImages', f);
       });
 
       if (isEdit) {

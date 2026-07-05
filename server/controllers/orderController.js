@@ -173,7 +173,10 @@ const getOrderById = asyncHandler(async (req, res) => {
     res.status(403);
     throw new Error('Not authorized');
   }
-  res.json({ success: true, order });
+  const ReturnRequest = require('../models/ReturnRequest');
+  const returnRequest = await ReturnRequest.findOne({ order: order._id });
+
+  res.json({ success: true, order, returnRequest });
 });
 
 // @desc    Get all orders (admin)
@@ -202,7 +205,8 @@ const getAllOrders = asyncHandler(async (req, res) => {
 // @route   PUT /api/admin/orders/:id/status
 // @access  Admin
 const updateOrderStatus = asyncHandler(async (req, res) => {
-  const { status, adminNote } = req.body;
+  const status = req.body.status || req.body.orderStatus;
+  const adminNote = req.body.adminNote;
   const order = await Order.findById(req.params.id);
   if (!order) {
     res.status(404);

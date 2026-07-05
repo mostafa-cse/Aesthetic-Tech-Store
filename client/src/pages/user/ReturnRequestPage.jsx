@@ -168,6 +168,11 @@ export default function ReturnRequestPage() {
     const load = async () => {
       try {
         const { data } = await api.get(`/orders/${orderId}`);
+        if (data.returnRequest) {
+          toast.error('A return request has already been submitted for this order.');
+          navigate('/orders');
+          return;
+        }
         setOrder(data.order);
       } catch {
         toast.error('Order not found');
@@ -199,7 +204,17 @@ export default function ReturnRequestPage() {
       fd.append('reason', reason);
       fd.append('reasonDetail', reasonDetail);
       fd.append('refundMethod', refundMethod);
-      selectedItems.forEach((id) => fd.append('items[]', id));
+      
+      const itemsToSubmit = order.items
+        .filter(item => selectedItems.includes(item.product?._id || item.product))
+        .map(item => ({
+          product: item.product?._id || item.product,
+          name: item.name || item.product?.name,
+          quantity: item.quantity,
+          price: item.price
+        }));
+      fd.append('items', JSON.stringify(itemsToSubmit));
+      
       evidenceFiles.forEach((f) => fd.append('evidence', f));
 
       await api.post('/returns', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -221,7 +236,7 @@ export default function ReturnRequestPage() {
   }
 
   const returnableItems = order?.items?.filter((item) =>
-    ['delivered'].includes(order.status)
+    ['delivered'].includes(order.orderStatus)
   ) || order?.items || [];
 
   return (
@@ -262,12 +277,13 @@ export default function ReturnRequestPage() {
               ) : (
                 <div className="space-y-3">
                   {returnableItems.map((item) => {
-                    const selected = selectedItems.includes(item._id || item.product);
+                    const itemId = item.product?._id || item.product;
+                    const selected = selectedItems.includes(itemId);
                     return (
                       <button
-                        key={item._id || item.product}
+                        key={itemId}
                         type="button"
-                        onClick={() => toggleItem(item._id || item.product)}
+                        onClick={() => toggleItem(itemId)}
                         className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
                           selected ? 'border-primary bg-primary/10' : 'border-dark-border hover:border-primary/40'
                         }`}

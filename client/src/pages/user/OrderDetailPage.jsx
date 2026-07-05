@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 export default function OrderDetailPage() {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
+  const [returnRequest, setReturnRequest] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function OrderDetailPage() {
     try {
       const res = await api.get(`/orders/${id}`);
       setOrder(res.data.order);
+      setReturnRequest(res.data.returnRequest);
     } catch (err) {
       toast.error('Failed to load order details');
       console.error(err);
@@ -45,7 +47,7 @@ export default function OrderDetailPage() {
   // Determine timeline progress
   const statuses = ['pending', 'processing', 'shipped', 'delivered'];
   let currentStepIndex = statuses.indexOf(order.orderStatus);
-  if (order.orderStatus === 'cancelled') currentStepIndex = -1;
+  if (order.orderStatus === 'cancelled' || order.orderStatus === 'returned') currentStepIndex = -1;
 
   // Check return eligibility (delivered and within 7 days)
   const isReturnEligible = () => {
@@ -75,6 +77,10 @@ export default function OrderDetailPage() {
           <span className="badge-error px-4 py-1.5 text-sm uppercase tracking-wider self-start md:self-auto">
             Cancelled
           </span>
+        ) : returnRequest ? (
+          <span className="badge-warning px-4 py-1.5 text-sm uppercase tracking-wider self-start md:self-auto flex items-center gap-2">
+            Return Requested ({returnRequest.status})
+          </span>
         ) : (
           isReturnEligible() && (
             <Link to={`/returns/new?orderId=${order._id}`} className="btn-outline flex items-center gap-2 self-start md:self-auto">
@@ -85,7 +91,7 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Status Timeline Bar */}
-      {order.orderStatus !== 'cancelled' && (
+      {order.orderStatus !== 'cancelled' && order.orderStatus !== 'returned' && (
         <div className="card p-6 mb-8 overflow-x-auto">
           <div className="min-w-[500px] relative">
             <div className="absolute left-[10%] right-[10%] top-5 h-1 bg-dark-border z-0" />
@@ -203,7 +209,7 @@ export default function OrderDetailPage() {
               
               <div className="flex justify-between text-lg font-bold text-white pt-3 border-t border-dark-border">
                 <span>Total</span>
-                <span className="text-primary">৳{order.total.toLocaleString()}</span>
+                <span className="text-primary">৳{order.totalAmount.toLocaleString()}</span>
               </div>
             </div>
 

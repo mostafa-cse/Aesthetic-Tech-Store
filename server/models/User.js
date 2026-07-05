@@ -23,7 +23,8 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Invalid email format'],
     },
-    password: { type: String, required: [true, 'Password is required'], minlength: 6, select: false },
+    password: { type: String, minlength: 6, select: false },
+    firebaseUid: { type: String, unique: true, sparse: true },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     avatar: { type: String, default: '' },
     avatarPublicId: { type: String, default: '' },
@@ -39,11 +40,10 @@ const userSchema = new mongoose.Schema(
 );
 
 // Hash password before save
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre('save', async function () {
+  if (!this.isModified('password') || !this.password) return;
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 // Compare password

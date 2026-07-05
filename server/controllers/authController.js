@@ -9,17 +9,17 @@ const { sendEmail, passwordResetEmail } = require('../utils/sendEmail');
 // @route   POST /api/auth/register
 // @access  Public
 const register = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
+  const { name, email, password, firebaseUid } = req.body;
+  if (!name || !email || (!password && !firebaseUid)) {
     res.status(400);
-    throw new Error('Please provide name, email and password');
+    throw new Error('Please provide name, email, and either password or firebaseUid');
   }
   const exists = await User.findOne({ email });
   if (exists) {
     res.status(400);
     throw new Error('Email already registered');
   }
-  const user = await User.create({ name, email, password });
+  const user = await User.create({ name, email, password, firebaseUid });
 
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
@@ -38,13 +38,22 @@ const register = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
+  const { email, password, firebaseUid } = req.body;
+  if (!email || (!password && !firebaseUid)) {
     res.status(400);
-    throw new Error('Please provide email and password');
+    throw new Error('Please provide email, and either password or firebaseUid');
   }
-  const user = await User.findOne({ email }).select('+password');
-  if (!user || !(await user.comparePassword(password))) {
+  const user = await User.findOne({ email }).select('+password +firebaseUid');
+  if (!user) {
+    res.status(401);
+    throw new Error('Invalid email or password');
+  }
+
+  // Check if firebaseUid matches OR password matches
+  const isFirebaseMatch = firebaseUid && user.firebaseUid === firebaseUid;
+  const isPasswordMatch = password && await user.comparePassword(password);
+
+  if (!isFirebaseMatch && !isPasswordMatch) {
     res.status(401);
     throw new Error('Invalid email or password');
   }

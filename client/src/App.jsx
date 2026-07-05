@@ -34,7 +34,6 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminReturns from './pages/admin/AdminReturns';
 import AdminUsers from './pages/admin/AdminUsers';
-import AdminSettings from './pages/admin/AdminSettings';
 import AdminMegaCoin from './pages/admin/AdminMegaCoin';
 
 // 404
@@ -96,7 +95,6 @@ function App() {
             <Route path="/admin/returns" element={<AdminReturns />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/megacoin" element={<AdminMegaCoin />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
         </Route>
 

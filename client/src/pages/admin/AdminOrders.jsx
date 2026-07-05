@@ -50,6 +50,7 @@ export default function AdminOrders() {
       case 'shipped': return <span className="badge-primary">Shipped</span>;
       case 'delivered': return <span className="badge-success">Delivered</span>;
       case 'cancelled': return <span className="badge-error">Cancelled</span>;
+      case 'returned': return <span className="badge-error">Returned</span>;
       default: return <span className="badge-primary">{status}</span>;
     }
   };
@@ -116,7 +117,7 @@ export default function AdminOrders() {
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                     <td className="text-sm font-bold text-primary">
-                      ৳{order.total.toLocaleString()}
+                      ৳{order.totalAmount.toLocaleString()}
                     </td>
                     <td>
                       {getStatusBadge(order.orderStatus)}
@@ -222,7 +223,7 @@ export default function AdminOrders() {
                       {order.megaCoinsRedeemed > 0 && (
                          <div className="flex justify-between"><span className="text-warning">MegaCoins</span> <span className="text-warning">-৳{(order.megaCoinsRedeemed/10).toLocaleString()}</span></div>
                       )}
-                      <div className="flex justify-between font-bold border-t border-dark-border pt-2"><span className="text-white">Total</span> <span className="text-primary">৳{order.total.toLocaleString()}</span></div>
+                      <div className="flex justify-between font-bold border-t border-dark-border pt-2"><span className="text-white">Total</span> <span className="text-primary">৳{order.totalAmount.toLocaleString()}</span></div>
                     </div>
                   </div>
                 </div>

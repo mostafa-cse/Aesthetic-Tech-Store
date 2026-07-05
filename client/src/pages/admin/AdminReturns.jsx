@@ -106,7 +106,9 @@ export default function AdminReturns() {
                 filteredReturns.map((req) => (
                   <tr key={req._id}>
                     <td className="font-mono text-xs uppercase">{req._id.substring(req._id.length - 8)}</td>
-                    <td className="font-mono text-xs uppercase text-gray-400">{req.order.substring(req.order.length - 8)}</td>
+                    <td className="font-mono text-xs uppercase text-gray-400">
+                      {req.order?._id ? req.order._id.substring(req.order._id.length - 8) : (req.order || '').substring((req.order || '').length - 8)}
+                    </td>
                     <td>
                       <p className="text-sm font-medium text-white">{req.user?.name}</p>
                     </td>
@@ -167,11 +169,11 @@ export default function AdminReturns() {
                       )}
                     </div>
 
-                    {req.evidenceImages?.length > 0 && (
+                    {req.evidence?.length > 0 && (
                       <div>
                         <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Evidence Photos</p>
                         <div className="flex gap-2 overflow-x-auto pb-2">
-                          {req.evidenceImages.map((img, i) => (
+                          {req.evidence.map((img, i) => (
                             <a key={i} href={img.url} target="_blank" rel="noreferrer" className="shrink-0">
                               <img src={img.url} alt="Evidence" className="w-20 h-20 rounded-lg object-cover border border-dark-border hover:border-primary transition-colors cursor-pointer" />
                             </a>

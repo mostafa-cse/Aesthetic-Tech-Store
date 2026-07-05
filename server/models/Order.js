@@ -52,7 +52,7 @@ const orderSchema = new mongoose.Schema(
     megaCoinsEarned: { type: Number, default: 0 },
 
     // Payment
-    paymentMethod: { type: String, enum: ['stripe', 'cod'], default: 'stripe' },
+    paymentMethod: { type: String, enum: ['stripe', 'cod'], default: 'stripe', lowercase: true },
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
     stripePaymentIntentId: { type: String, default: '' },
     paidAt: Date,
@@ -60,7 +60,7 @@ const orderSchema = new mongoose.Schema(
     // Order status
     orderStatus: {
       type: String,
-      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'],
       default: 'pending',
     },
     deliveredAt: Date,

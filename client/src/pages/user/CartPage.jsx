@@ -45,7 +45,7 @@ export default function CartPage() {
       const res = await api.post('/coupons/validate', { code: couponCode, cartTotal: subtotal });
       const coupon = res.data.coupon;
       setAppliedCoupon(coupon);
-      setCouponDiscount(res.data.discountAmount);
+      setCouponDiscount(res.data.discount || 0);
       toast.success('Coupon applied successfully!');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Invalid coupon');

@@ -5,7 +5,7 @@ const megaCoinTransactionSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     type: {
       type: String,
-      enum: ['earn', 'redeem', 'admin-credit', 'admin-deduct', 'refund-credit'],
+      enum: ['earn', 'redeem', 'admin-credit', 'admin-deduct', 'refund-credit', 'refund-deduct'],
       required: true,
     },
     amount: { type: Number, required: true }, // positive for earn/credit, negative for redeem/deduct

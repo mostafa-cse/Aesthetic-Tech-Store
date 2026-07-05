@@ -78,6 +78,18 @@ const getProductById = asyncHandler(async (req, res) => {
   res.json({ success: true, product });
 });
 
+// Helper to safely parse tags (handles both JSON arrays and raw comma-separated strings)
+const parseTags = (tagsVal) => {
+  if (!tagsVal) return [];
+  try {
+    const parsed = JSON.parse(tagsVal);
+    if (Array.isArray(parsed)) return parsed;
+    return String(parsed).split(',').map(t => t.trim()).filter(Boolean);
+  } catch (e) {
+    return String(tagsVal).split(',').map(t => t.trim()).filter(Boolean);
+  }
+};
+
 // @desc    Create product (admin)
 // @route   POST /api/admin/products
 // @access  Admin
@@ -89,7 +101,11 @@ const createProduct = asyncHandler(async (req, res) => {
     megaCoinRewardRate, returnPolicy, tags, isFeatured,
   } = req.body;
 
-  const images = req.files ? req.files.map((f) => ({ url: f.path, publicId: f.filename })) : [];
+  const images = req.files ? req.files.map((f) => {
+    const isCloudinary = f.path && f.path.startsWith('http');
+    const url = isCloudinary ? f.path : `${req.protocol}://${req.get('host')}/uploads/${f.filename}`;
+    return { url, publicId: f.filename };
+  }) : [];
 
   const product = await Product.create({
     name,
@@ -107,7 +123,7 @@ const createProduct = asyncHandler(async (req, res) => {
     sku,
     megaCoinRewardRate: megaCoinRewardRate ? Number(megaCoinRewardRate) : null,
     returnPolicy: returnPolicy ? JSON.parse(returnPolicy) : {},
-    tags: tags ? JSON.parse(tags) : [],
+    tags: parseTags(tags),
     isFeatured: isFeatured === 'true',
   });
 
@@ -129,16 +145,27 @@ const updateProduct = asyncHandler(async (req, res) => {
   if (updates.guarantee) updates.guarantee = JSON.parse(updates.guarantee);
   if (updates.warranty) updates.warranty = JSON.parse(updates.warranty);
   if (updates.returnPolicy) updates.returnPolicy = JSON.parse(updates.returnPolicy);
-  if (updates.tags) updates.tags = JSON.parse(updates.tags);
+  if (updates.tags) updates.tags = parseTags(updates.tags);
   if (updates.regularPrice) updates.regularPrice = Number(updates.regularPrice);
   if (updates.discountPrice) updates.discountPrice = Number(updates.discountPrice);
   if (updates.stock !== undefined) updates.stock = Number(updates.stock);
 
-  // Add new images if uploaded
-  if (req.files && req.files.length > 0) {
-    const newImages = req.files.map((f) => ({ url: f.path, publicId: f.filename }));
-    updates.images = [...product.images, ...newImages];
+  let currentImages = product.images;
+  if (req.body.existingImages) {
+    currentImages = JSON.parse(req.body.existingImages);
   }
+
+  if (req.files && req.files.length > 0) {
+    const newImages = req.files.map((f) => {
+      const isCloudinary = f.path && f.path.startsWith('http');
+      const url = isCloudinary ? f.path : `${req.protocol}://${req.get('host')}/uploads/${f.filename}`;
+      return { url, publicId: f.filename };
+    });
+    updates.images = [...currentImages, ...newImages];
+  } else {
+    updates.images = currentImages;
+  }
+  delete updates.existingImages;
 
   Object.assign(product, updates);
   await product.save();

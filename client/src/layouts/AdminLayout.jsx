@@ -19,7 +19,6 @@ const navItems = [
   { icon: FiRefreshCw, label: 'Returns', to: '/admin/returns' },
   { icon: FiUsers, label: 'Users', to: '/admin/users' },
   { icon: FiBarChart2, label: 'MegaCoin', to: '/admin/megacoin' },
-  { icon: FiSettings, label: 'Settings', to: '/admin/settings' },
 ];
 
 export default function AdminLayout() {

@@ -43,7 +43,11 @@ const submitReturnRequest = asyncHandler(async (req, res) => {
     throw new Error('A return request already exists for this order');
   }
 
-  const evidence = req.files ? req.files.map((f) => ({ url: f.path, publicId: f.filename })) : [];
+  const evidence = req.files ? req.files.map((f) => {
+    const isCloudinary = f.path && f.path.startsWith('http');
+    const url = isCloudinary ? f.path : `${req.protocol}://${req.get('host')}/uploads/${f.filename}`;
+    return { url, publicId: f.filename };
+  }) : [];
 
   const returnRequest = await ReturnRequest.create({
     order: orderId,
@@ -106,20 +110,61 @@ const updateReturnStatus = asyncHandler(async (req, res) => {
     returnRequest.refundAmount = refundAmount || 0;
     returnRequest.refundedAt = new Date();
 
+    const order = await Order.findById(returnRequest.order);
+    if (order) {
+      order.orderStatus = 'returned';
+      order.timeline.push({ status: 'returned', message: 'Order items returned and refunded' });
+      await order.save();
+    }
+
+    const settings = await Settings.findOne();
+    const targetUser = await User.findById(returnRequest.user._id);
+    let currentBalance = targetUser.megaCoinBalance;
+
+    // 1. If refund method is megacoin, credit the refund coins
     if (returnRequest.refundMethod === 'megacoin') {
-      const settings = await Settings.findOne();
       const redeemRate = settings?.megaCoin?.redeemRate || 10;
       const coinsToCredit = Math.floor((refundAmount || 0) * redeemRate);
-      await User.findByIdAndUpdate(returnRequest.user._id, { $inc: { megaCoinBalance: coinsToCredit } });
+      
+      currentBalance += coinsToCredit;
+      targetUser.megaCoinBalance = currentBalance;
+      await targetUser.save();
+
       await MegaCoinTransaction.create({
         user: returnRequest.user._id,
         type: 'refund-credit',
         amount: coinsToCredit,
-        balance: returnRequest.user.megaCoinBalance + coinsToCredit,
+        balance: currentBalance,
         description: `Refund credit for Return #${returnRequest._id.toString().slice(-6)}`,
       });
     }
-    // For 'original-payment' — manual/Stripe refund process
+
+    // 2. Deduct MegaCoins that the user earned for purchasing these returned items
+    const earnRate = settings?.megaCoin?.earnRate || 10;
+    const returnedValue = returnRequest.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const coinsToDeduct = Math.floor(returnedValue / earnRate);
+
+    if (coinsToDeduct > 0) {
+      currentBalance = Math.max(0, currentBalance - coinsToDeduct);
+      targetUser.megaCoinBalance = currentBalance;
+      await targetUser.save();
+
+      await MegaCoinTransaction.create({
+        user: returnRequest.user._id,
+        type: 'refund-deduct',
+        amount: -coinsToDeduct,
+        balance: currentBalance,
+        description: `Deducted coins earned from returned items of Order #${order?._id.toString().slice(-8).toUpperCase()}`,
+      });
+    }
+
+    // 3. Put product stock back
+    const Product = require('../models/Product');
+    await Promise.all(
+      returnRequest.items.map((item) =>
+        Product.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } })
+      )
+    );
   }
 
   await returnRequest.save();

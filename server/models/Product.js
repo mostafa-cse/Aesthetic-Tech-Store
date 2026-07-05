@@ -61,8 +61,8 @@ const productSchema = new mongoose.Schema(
 );
 
 // Auto-generate slug from name
-productSchema.pre('save', async function (next) {
-  if (!this.isModified('name')) return next();
+productSchema.pre('save', async function () {
+  if (!this.isModified('name')) return;
   const slugify = require('slugify');
   let slug = slugify(this.name, { lower: true, strict: true });
   const exists = await mongoose.model('Product').findOne({ slug });
@@ -70,7 +70,6 @@ productSchema.pre('save', async function (next) {
     slug = `${slug}-${Date.now()}`;
   }
   this.slug = slug;
-  next();
 });
 
 // Virtual for discount percentage

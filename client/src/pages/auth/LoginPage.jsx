@@ -7,6 +7,8 @@ import { HiSparkles } from 'react-icons/hi2';
 import { loginUser, clearError } from '../../features/auth/authSlice';
 import { fetchCart } from '../../features/cart/cartSlice';
 import toast from 'react-hot-toast';
+import { auth } from '../../firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
   const dispatch = useDispatch();
@@ -25,7 +27,16 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await dispatch(loginUser(form));
+    
+    let firebaseUid;
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
+      firebaseUid = userCredential.user.uid;
+    } catch (err) {
+      // Ignored: fall back to backend legacy login if Firebase account doesn't exist
+    }
+
+    const result = await dispatch(loginUser({ ...form, firebaseUid }));
     if (loginUser.fulfilled.match(result)) {
       dispatch(fetchCart());
       toast.success(`Welcome back, ${result.payload.user.name}!`);

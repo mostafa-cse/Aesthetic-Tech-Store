@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiPackage, FiEye, FiClock, FiCheckCircle, FiXCircle, FiTruck } from 'react-icons/fi';
+import { FiPackage, FiEye, FiClock, FiCheckCircle, FiXCircle, FiTruck, FiRefreshCw } from 'react-icons/fi';
 import api from '../../utils/api';
 
 export default function OrdersPage() {
@@ -29,6 +29,7 @@ export default function OrdersPage() {
       case 'shipped': return { icon: FiTruck, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' };
       case 'delivered': return { icon: FiCheckCircle, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' };
       case 'cancelled': return { icon: FiXCircle, color: 'text-error', bg: 'bg-error/10', border: 'border-error/20' };
+      case 'returned': return { icon: FiRefreshCw, color: 'text-error', bg: 'bg-error/5', border: 'border-error/10' };
       default: return { icon: FiClock, color: 'text-gray-400', bg: 'bg-gray-800', border: 'border-gray-700' };
     }
   };
@@ -128,7 +129,7 @@ export default function OrdersPage() {
                   </div>
                   <div>
                     <p className="text-gray-400">Total Amount</p>
-                    <p className="font-bold text-primary">৳{order.total.toLocaleString()}</p>
+                    <p className="font-bold text-primary">৳{order.totalAmount.toLocaleString()}</p>
                   </div>
                 </div>
               </div>

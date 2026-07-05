@@ -34,25 +34,7 @@ const toggleUserStatus = asyncHandler(async (req, res) => {
   res.json({ success: true, user });
 });
 
-// @desc    Get store settings (admin)
-// @route   GET /api/admin/settings
-// @access  Admin
-const getSettings = asyncHandler(async (req, res) => {
-  let settings = await Settings.findOne();
-  if (!settings) settings = await Settings.create({});
-  res.json({ success: true, settings });
-});
 
-// @desc    Update store settings (admin)
-// @route   PUT /api/admin/settings
-// @access  Admin
-const updateSettings = asyncHandler(async (req, res) => {
-  let settings = await Settings.findOne();
-  if (!settings) settings = new Settings();
-  Object.assign(settings, req.body);
-  await settings.save();
-  res.json({ success: true, settings });
-});
 
 // @desc    Update user profile (self)
 // @route   PUT /api/users/profile
@@ -68,9 +50,16 @@ const updateProfile = asyncHandler(async (req, res) => {
   if (phone) user.phone = phone;
 
   if (req.file) {
+    const isCloudinary = req.file.path && req.file.path.startsWith('http');
     const { cloudinary } = require('../config/cloudinary');
-    if (user.avatarPublicId) await cloudinary.uploader.destroy(user.avatarPublicId);
-    user.avatar = req.file.path;
+    if (user.avatarPublicId && isCloudinary) {
+      try {
+        await cloudinary.uploader.destroy(user.avatarPublicId);
+      } catch (err) {
+        // Ignored
+      }
+    }
+    user.avatar = isCloudinary ? req.file.path : `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     user.avatarPublicId = req.file.filename;
   }
   await user.save();
@@ -116,4 +105,4 @@ const deleteAddress = asyncHandler(async (req, res) => {
   res.json({ success: true, addresses: user.addresses });
 });
 
-module.exports = { getAllUsers, toggleUserStatus, getSettings, updateSettings, updateProfile, updatePassword, addAddress, deleteAddress };
+module.exports = { getAllUsers, toggleUserStatus, updateProfile, updatePassword, addAddress, deleteAddress };
