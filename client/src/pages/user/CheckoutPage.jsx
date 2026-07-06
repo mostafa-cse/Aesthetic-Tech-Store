@@ -46,6 +46,7 @@ export default function CheckoutPage() {
     postalCode: user?.addresses?.find(a => a.isDefault)?.postalCode || '',
   });
   const [paymentMethod, setPaymentMethod] = useState('COD'); // COD or Card
+  const [checkoutMethod, setCheckoutMethod] = useState('delivery'); // 'delivery' or 'pickup'
 
   // MegaCoin Earned Calculation
   // 1 coin per 10 Taka spent on the final total (excluding shipping for now, assuming free)
@@ -146,10 +147,60 @@ export default function CheckoutPage() {
                 exit={{ opacity: 0, x: -20 }}
                 className="card p-6"
               >
-                <h2 className="text-xl font-bold text-white mb-6">Shipping Address</h2>
+                <h2 className="text-xl font-bold text-white mb-6">
+                  {checkoutMethod === 'pickup' ? 'Pickup Details' : 'Shipping Address'}
+                </h2>
+                
+                {/* Checkout Method Selection */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCheckoutMethod('delivery');
+                      setShipping({
+                        fullName: user?.name || '',
+                        phone: user?.phone || '',
+                        address: user?.addresses?.find(a => a.isDefault)?.address || '',
+                        city: user?.addresses?.find(a => a.isDefault)?.city || '',
+                        district: user?.addresses?.find(a => a.isDefault)?.district || '',
+                        postalCode: user?.addresses?.find(a => a.isDefault)?.postalCode || '',
+                      });
+                    }}
+                    className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+                      checkoutMethod === 'delivery'
+                        ? 'bg-primary/10 border-primary text-white shadow-glow-sm'
+                        : 'bg-dark-surface border-dark-border text-gray-400 hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-xl">🚚</span>
+                    <span className="font-semibold text-sm">Home Delivery</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCheckoutMethod('pickup');
+                      setShipping({
+                        fullName: user?.name || '',
+                        phone: user?.phone || '',
+                        address: 'Instant Pickup (Jashore University Of Science and Technology)',
+                        city: 'Jashore',
+                        district: 'Jashore',
+                        postalCode: '7408',
+                      });
+                    }}
+                    className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+                      checkoutMethod === 'pickup'
+                        ? 'bg-primary/10 border-primary text-white shadow-glow-sm'
+                        : 'bg-dark-surface border-dark-border text-gray-400 hover:border-gray-600'
+                    }`}
+                  >
+                    <span className="text-xl">🏪</span>
+                    <span className="font-semibold text-sm">Instant Pickup</span>
+                  </button>
+                </div>
                 
                 {/* Saved Addresses (if any) */}
-                {user?.addresses?.length > 0 && (
+                {checkoutMethod === 'delivery' && user?.addresses?.length > 0 && (
                   <div className="mb-6 space-y-3">
                     <h3 className="text-sm font-medium text-gray-400">Select Saved Address</h3>
                     <div className="grid sm:grid-cols-2 gap-3">
@@ -186,24 +237,43 @@ export default function CheckoutPage() {
                       <input type="tel" name="phone" value={shipping.phone} onChange={handleShippingChange} required className="input" />
                     </div>
                   </div>
-                  <div>
-                    <label className="input-label">Street Address *</label>
-                    <input type="text" name="address" value={shipping.address} onChange={handleShippingChange} required className="input" placeholder="House/Apartment, Street name" />
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="input-label">City *</label>
-                      <input type="text" name="city" value={shipping.city} onChange={handleShippingChange} required className="input" />
+                  
+                  {checkoutMethod === 'delivery' ? (
+                    <>
+                      <div>
+                        <label className="input-label">Street Address *</label>
+                        <input type="text" name="address" value={shipping.address} onChange={handleShippingChange} required className="input" placeholder="House/Apartment, Street name" />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <label className="input-label">City *</label>
+                          <input type="text" name="city" value={shipping.city} onChange={handleShippingChange} required className="input" />
+                        </div>
+                        <div>
+                          <label className="input-label">District</label>
+                          <input type="text" name="district" value={shipping.district} onChange={handleShippingChange} className="input" />
+                        </div>
+                        <div>
+                          <label className="input-label">Postal Code</label>
+                          <input type="text" name="postalCode" value={shipping.postalCode} onChange={handleShippingChange} className="input" />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-4 bg-dark-surface rounded-xl border border-dark-border space-y-2">
+                      <p className="text-sm font-semibold text-white flex items-center gap-2">
+                        <span>🏪</span> Pickup Location Details
+                      </p>
+                      <p className="text-xs text-gray-400 leading-relaxed">
+                        <strong>Address:</strong> Jashore University Of Science and Technology (Campus Point)<br />
+                        <strong>City:</strong> Jashore, 7408<br />
+                        <strong>Contact Support:</strong> 01571276031
+                      </p>
+                      <p className="text-[11px] text-primary bg-primary/5 p-2 rounded border border-primary/20 mt-2">
+                        💡 Collect your order directly from the campus point. Bring your order details or invoice copy.
+                      </p>
                     </div>
-                    <div>
-                      <label className="input-label">District</label>
-                      <input type="text" name="district" value={shipping.district} onChange={handleShippingChange} className="input" />
-                    </div>
-                    <div>
-                      <label className="input-label">Postal Code</label>
-                      <input type="text" name="postalCode" value={shipping.postalCode} onChange={handleShippingChange} className="input" />
-                    </div>
-                  </div>
+                  )}
                   
                   <div className="pt-4 flex justify-end">
                     <button type="submit" className="btn-primary flex items-center gap-2">
@@ -314,7 +384,7 @@ export default function CheckoutPage() {
                 <div className="grid sm:grid-cols-2 gap-6 mb-8">
                   <div className="p-4 bg-dark-surface rounded-xl border border-dark-border">
                     <h3 className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
-                      <FiMapPin className="text-primary" /> Shipping Details
+                      <FiMapPin className="text-primary" /> {checkoutMethod === 'pickup' ? 'Pickup Details' : 'Shipping Details'}
                     </h3>
                     <p className="text-sm text-white">{shipping.fullName}</p>
                     <p className="text-sm text-gray-400">{shipping.phone}</p>
@@ -378,8 +448,8 @@ export default function CheckoutPage() {
               </div>
               
               <div className="flex justify-between text-gray-400">
-                <span>Shipping</span>
-                <span className="text-white">Free</span>
+                <span>Method</span>
+                <span className="text-white font-semibold">{checkoutMethod === 'pickup' ? 'Instant Pickup' : 'Home Delivery'}</span>
               </div>
               
               {appliedCoupon && (
