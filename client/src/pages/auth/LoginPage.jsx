@@ -131,10 +131,10 @@ export default function LoginPage() {
           </form>
 
           {/* Demo credentials */}
-          <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+          {/* <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
             <p className="text-xs text-gray-400 mb-1 font-medium">Demo Admin:</p>
             <p className="text-xs text-gray-500">admin@aesthetictech.com / admin123</p>
-          </div>
+          </div> */}
 
           <p className="text-center text-sm text-gray-400 mt-5">
             Don't have an account?{' '}

@@ -227,37 +227,93 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/analytics
 // @access  Admin
 const getAnalytics = asyncHandler(async (req, res) => {
-  const [totalOrders, totalUsers, revenueAgg, topProducts] = await Promise.all([
-    Order.countDocuments({ paymentStatus: 'paid' }),
-    (await import('../models/User.js').catch(() => require('../models/User'))).default?.countDocuments?.() || User.countDocuments?.(),
+  const ReturnRequest = require('../models/ReturnRequest');
+  
+  const [
+    totalOrders,
+    pendingOrders,
+    deliveredOrders,
+    cancelledOrders,
+    totalUsers,
+    revenueAgg,
+    topProducts,
+    weeklyRevenue,
+    totalProducts,
+    lowStockProducts,
+    lowStockItems,
+    totalReturns
+  ] = await Promise.all([
+    Order.countDocuments(),
+    Order.countDocuments({ orderStatus: 'pending' }),
+    Order.countDocuments({ orderStatus: 'delivered' }),
+    Order.countDocuments({ orderStatus: 'cancelled' }),
+    User.countDocuments(),
     Order.aggregate([{ $match: { paymentStatus: 'paid' } }, { $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
     Order.aggregate([
       { $match: { paymentStatus: 'paid' } },
       { $unwind: '$items' },
-      { $group: { _id: '$items.product', totalSold: { $sum: '$items.quantity' }, revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } } } },
-      { $sort: { totalSold: -1 } },
+      {
+        $group: {
+          _id: '$items.product',
+          soldCount: { $sum: '$items.quantity' },
+          revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } }
+        }
+      },
+      { $sort: { soldCount: -1 } },
       { $limit: 5 },
       { $lookup: { from: 'products', localField: '_id', foreignField: '_id', as: 'product' } },
       { $unwind: '$product' },
+      {
+        $project: {
+          _id: 1,
+          soldCount: 1,
+          revenue: 1,
+          name: '$product.name',
+          images: '$product.images',
+        }
+      }
     ]),
+    Order.aggregate([
+      { $match: { paymentStatus: 'paid', createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } },
+      { $group: { _id: { $dayOfWeek: '$createdAt' }, revenue: { $sum: '$totalAmount' }, orders: { $sum: 1 } } },
+      { $sort: { '_id': 1 } },
+    ]),
+    Product.countDocuments(),
+    Product.countDocuments({ stock: { $lt: 5 } }),
+    Product.find({ stock: { $lt: 5 } }).select('name stock'),
+    ReturnRequest.countDocuments()
   ]);
 
-  // Weekly revenue
-  const weeklyRevenue = await Order.aggregate([
-    { $match: { paymentStatus: 'paid', createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } },
-    { $group: { _id: { $dayOfWeek: '$createdAt' }, revenue: { $sum: '$totalAmount' }, orders: { $sum: 1 } } },
-    { $sort: { '_id': 1 } },
-  ]);
+  const totalRevenue = revenueAgg[0]?.total || 0;
+  const avgOrderValue = totalOrders > 0 ? (totalRevenue / totalOrders) : 0;
+
+  // Format weekly revenue to match client chart day names
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const formattedWeeklyRevenue = dayNames.map((day, idx) => {
+    const match = weeklyRevenue.find((w) => w._id === (idx + 1));
+    return {
+      day,
+      revenue: match ? match.revenue : 0,
+      orders: match ? match.orders : 0
+    };
+  });
 
   res.json({
     success: true,
     analytics: {
       totalOrders,
-      totalRevenue: revenueAgg[0]?.total || 0,
-      totalProducts: await Product.countDocuments({ isActive: true }),
-      totalUsers: await User.countDocuments(),
+      pendingOrders,
+      deliveredOrders,
+      cancelledOrders,
+      totalRevenue,
+      avgOrderValue,
+      totalProducts,
+      lowStockProducts,
+      lowStockItems,
+      totalUsers,
+      totalReturns,
       topProducts,
-      weeklyRevenue,
+      weeklyRevenue: formattedWeeklyRevenue,
     },
   });
 });
