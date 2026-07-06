@@ -1,14 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { getAllUsers, toggleUserStatus, updateProfile, updatePassword, addAddress, deleteAddress } = require('../controllers/adminController');
+const { getAllUsers, toggleUserStatus, updateProfile, updatePassword, addAddress, deleteAddress, getAddresses } = require('../controllers/adminController');
 const { deleteReview } = require('../controllers/reviewController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 const { uploadAvatar } = require('../config/cloudinary');
 
 // User self-management
 router.put('/profile', protect, uploadAvatar.single('avatar'), updateProfile);
+router.post('/profile', protect, uploadAvatar.single('avatar'), updateProfile); // Support POST profile
 router.put('/password', protect, updatePassword);
+router.post('/password', protect, updatePassword); // Support POST password
+router.post('/change-password', protect, updatePassword); // Support POST change-password
 router.post('/addresses', protect, addAddress);
+router.get('/addresses', protect, getAddresses); // Support GET addresses
 router.delete('/addresses/:addressId', protect, deleteAddress);
 
 // Admin — user management

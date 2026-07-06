@@ -105,4 +105,16 @@ const deleteAddress = asyncHandler(async (req, res) => {
   res.json({ success: true, addresses: user.addresses });
 });
 
-module.exports = { getAllUsers, toggleUserStatus, updateProfile, updatePassword, addAddress, deleteAddress };
+// @desc    Get user addresses (self)
+// @route   GET /api/users/addresses
+// @access  Private
+const getAddresses = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+  res.json({ success: true, addresses: user.addresses || [] });
+});
+
+module.exports = { getAllUsers, toggleUserStatus, updateProfile, updatePassword, addAddress, deleteAddress, getAddresses };
