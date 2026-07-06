@@ -249,7 +249,7 @@ export default function AdminDashboard() {
                   <span className="text-xs font-bold text-gray-600 w-4 shrink-0">#{i + 1}</span>
                   <div className="w-10 h-10 rounded-lg bg-dark-muted overflow-hidden shrink-0">
                     {p.images?.[0] ? (
-                      <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+                      <img src={p.images[0]?.url || (typeof p.images[0] === 'string' ? p.images[0] : '/placeholder.png')} alt={p.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-600">
                         <FiPackage />
